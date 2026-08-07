@@ -4,13 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
-    <title>Fractal Snake — Black</title>
+    <title>Black Silver Field</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <main>
-        <canvas id="snake" aria-label="A slow monochrome fractal snake moving through a black gradient"></canvas>
-        <p id="status" role="status" aria-live="polite"></p>
+    <main aria-label="A slowly pulsing black and silver sparkling gradient">
+        <svg id="field" viewBox="0 0 800 600" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+                <radialGradient id="black-silver-gradient" cx="50%" cy="50%" r="58%">
+                    <stop offset="0%" stop-color="#f4f4f2"/>
+                    <stop offset="8%" stop-color="#65676a"/>
+                    <stop offset="17%" stop-color="#080808"/>
+                    <stop offset="27%" stop-color="#b7b9bc"/>
+                    <stop offset="38%" stop-color="#171717"/>
+                    <stop offset="50%" stop-color="#020202"/>
+                    <stop offset="62%" stop-color="#777a7e"/>
+                    <stop offset="73%" stop-color="#111111"/>
+                    <stop offset="84%" stop-color="#c9cbce"/>
+                    <stop offset="93%" stop-color="#303236"/>
+                    <stop offset="100%" stop-color="#000000"/>
+                    <animate attributeName="r" values="54%;66%;54%" dur="34s" repeatCount="indefinite"/>
+                    <animate attributeName="cx" values="49%;51%;49%" dur="47s" repeatCount="indefinite"/>
+                    <animate attributeName="cy" values="51%;49%;51%" dur="41s" repeatCount="indefinite"/>
+                </radialGradient>
+
+                <radialGradient id="silver-vignette" cx="50%" cy="48%" r="72%">
+                    <stop offset="42%" stop-color="#ffffff" stop-opacity="0"/>
+                    <stop offset="76%" stop-color="#050505" stop-opacity=".18"/>
+                    <stop offset="100%" stop-color="#000000" stop-opacity=".82"/>
+                </radialGradient>
+            </defs>
+
+            <rect class="gradient-layer" width="800" height="600" fill="url(#black-silver-gradient)"/>
+            <rect width="800" height="600" fill="url(#silver-vignette)"/>
+            <g id="sparkles"></g>
+        </svg>
     </main>
     <script src="app.js"></script>
 </body>
