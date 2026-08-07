@@ -4,6 +4,14 @@
     const canvas = document.getElementById('field');
     const status = document.getElementById('status');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function showFallback(message) {
+        canvas.hidden = true;
+        canvas.style.setProperty('display', 'none', 'important');
+        document.documentElement.classList.add('webgl-fallback');
+        status.textContent = message;
+    }
+
     const gl = canvas.getContext('webgl', {
         alpha: false,
         antialias: false,
@@ -13,8 +21,7 @@
     });
 
     if (!gl) {
-        canvas.hidden = true;
-        status.textContent = 'WebGL is unavailable; showing the black and silver fallback.';
+        showFallback('WebGL is unavailable; showing the black and silver fallback.');
         return;
     }
 
@@ -27,7 +34,7 @@
     `;
 
     const fragmentSource = `
-        precision highp float;
+        precision mediump float;
 
         uniform vec2 u_resolution;
         uniform float u_time;
@@ -127,6 +134,7 @@
         const timeLocation = gl.getUniformLocation(program, 'u_time');
         const buffer = gl.createBuffer();
         let frame = 0;
+        let outputVerified = false;
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
         gl.bufferData(
@@ -158,6 +166,25 @@
             gl.uniform1f(timeLocation, time);
             gl.drawArrays(gl.TRIANGLES, 0, 3);
 
+            if (!outputVerified) {
+                const pixel = new Uint8Array(4);
+                gl.readPixels(
+                    Math.floor(canvas.width / 2),
+                    Math.floor(canvas.height / 2),
+                    1,
+                    1,
+                    gl.RGBA,
+                    gl.UNSIGNED_BYTE,
+                    pixel
+                );
+                outputVerified = true;
+
+                if (pixel[0] + pixel[1] + pixel[2] < 24) {
+                    showFallback('WebGL returned an empty frame; showing the black and silver fallback.');
+                    return;
+                }
+            }
+
             if (!reducedMotion.matches && !document.hidden) {
                 frame = requestAnimationFrame(draw);
             }
@@ -183,14 +210,13 @@
         canvas.addEventListener('webglcontextlost', (event) => {
             event.preventDefault();
             cancelAnimationFrame(frame);
-            status.textContent = 'The WebGL field paused.';
+            showFallback('The WebGL field paused; showing the black and silver fallback.');
         });
 
         resize();
         start();
     } catch (error) {
         console.error('Unable to start the WebGL field:', error);
-        canvas.hidden = true;
-        status.textContent = 'WebGL could not start; showing the black and silver fallback.';
+        showFallback('WebGL could not start; showing the black and silver fallback.');
     }
 })();
