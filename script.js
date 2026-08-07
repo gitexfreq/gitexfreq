@@ -21,7 +21,8 @@ function animateBackground() {
             <rect x="0" y="0" width="800" height="600" fill="url(#psychedelic-gradient)" />
         </svg>`;
 
-    background.style.backgroundImage = `url('data:image/svg+xml;utf8,${gradient}')`;
+    const encodedGradient = encodeURIComponent(gradient);
+    background.style.backgroundImage = `url("data:image/svg+xml,${encodedGradient}")`;
 
     requestAnimationFrame(animateBackground);
 }
