@@ -1,6 +1,6 @@
 :root {
     color-scheme: dark;
-    background: #000000;
+    background: #000;
 }
 
 * {
@@ -16,7 +16,7 @@ main {
     overflow: hidden;
     overscroll-behavior: none;
     background:
-        radial-gradient(ellipse at 50% 14%, #242424 0%, #090909 46%, #000000 100%);
+        radial-gradient(ellipse at center, #b7b9bc 0%, #282a2d 22%, #080808 55%, #000 100%);
 }
 
 body,
@@ -28,22 +28,70 @@ main {
     min-height: 100dvh;
 }
 
-#snake {
+#field {
     display: block;
     width: 100vw;
     height: 100vh;
     height: 100svh;
     height: 100dvh;
-    border: 0;
-    outline: 0;
-    touch-action: none;
 }
 
-#status {
-    position: fixed;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+.gradient-layer {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: breathe 28s ease-in-out infinite alternate;
+}
+
+.sparkle {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: twinkle var(--duration) ease-in-out var(--delay) infinite;
+}
+
+.sparkle--bright {
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, .78));
+}
+
+@keyframes breathe {
+    from {
+        transform: scale(1);
+        filter: brightness(.76) contrast(1.12);
+    }
+
+    to {
+        transform: scale(1.075);
+        filter: brightness(1.02) contrast(1.03);
+    }
+}
+
+@keyframes twinkle {
+    0%,
+    100% {
+        opacity: .04;
+        transform: scale(.35);
+    }
+
+    44% {
+        opacity: .18;
+    }
+
+    50% {
+        opacity: var(--peak);
+        transform: scale(1);
+    }
+
+    57% {
+        opacity: .12;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gradient-layer,
+    .sparkle {
+        animation: none;
+    }
+
+    .sparkle {
+        opacity: .32;
+    }
 }
