@@ -1,0 +1,63 @@
+:root {
+    color-scheme: dark;
+    background: #18002e;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    min-height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    background:
+        radial-gradient(ellipse at center,
+            #ffe400 0%,
+            #c7ced9 10%,
+            #ff8a00 20%,
+            #ff1028 31%,
+            #75007f 43%,
+            #ffe900 54%,
+            #75007f 66%,
+            #ff1028 78%,
+            #ff8a00 90%,
+            #ffe400 100%);
+}
+
+body {
+    position: fixed;
+    inset: 0;
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
+}
+
+#gl-canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    height: 100svh;
+    height: 100dvh;
+    border: 0;
+    outline: 0;
+    touch-action: none;
+}
+
+#status {
+    position: fixed;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #gl-canvas {
+        display: none;
+    }
+}
