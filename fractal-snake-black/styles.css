@@ -50,6 +50,23 @@ main,
     touch-action: none;
 }
 
+#field[hidden] {
+    display: none !important;
+}
+
+html.webgl-fallback body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 18% 24%, rgba(255, 255, 255, .72) 0 1px, transparent 1.8px),
+        radial-gradient(circle at 72% 33%, rgba(210, 212, 215, .55) 0 1px, transparent 1.7px),
+        radial-gradient(circle at 42% 78%, rgba(255, 255, 255, .62) 0 1px, transparent 1.8px);
+    background-size: 83px 97px, 127px 109px, 151px 137px;
+    opacity: .48;
+}
+
 #status {
     position: fixed;
     width: 1px;
