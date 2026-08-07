@@ -1,0 +1,49 @@
+:root {
+    color-scheme: dark;
+    background: #000000;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+main {
+    margin: 0;
+    width: 100%;
+    min-height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    background:
+        radial-gradient(ellipse at 50% 14%, #242424 0%, #090909 46%, #000000 100%);
+}
+
+body,
+main {
+    position: fixed;
+    inset: 0;
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
+}
+
+#snake {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    height: 100svh;
+    height: 100dvh;
+    border: 0;
+    outline: 0;
+    touch-action: none;
+}
+
+#status {
+    position: fixed;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
