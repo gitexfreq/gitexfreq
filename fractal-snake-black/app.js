@@ -1,49 +1,196 @@
 (() => {
     'use strict';
 
-    const namespace = 'http://www.w3.org/2000/svg';
-    const sparkleGroup = document.getElementById('sparkles');
+    const canvas = document.getElementById('field');
+    const status = document.getElementById('status');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const gl = canvas.getContext('webgl', {
+        alpha: false,
+        antialias: false,
+        depth: false,
+        stencil: false,
+        powerPreference: 'high-performance'
+    });
 
-    if (!sparkleGroup) {
+    if (!gl) {
+        canvas.hidden = true;
+        status.textContent = 'WebGL is unavailable; showing the black and silver fallback.';
         return;
     }
 
-    function randomGenerator(seed) {
-        let state = seed >>> 0;
+    const vertexSource = `
+        attribute vec2 a_position;
 
-        return () => {
-            state += 0x6d2b79f5;
-            let value = state;
-            value = Math.imul(value ^ (value >>> 15), value | 1);
-            value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
-            return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
-        };
+        void main() {
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    `;
+
+    const fragmentSource = `
+        precision highp float;
+
+        uniform vec2 u_resolution;
+        uniform float u_time;
+
+        #define TAU 6.283185307179586
+
+        float hash21(vec2 p) {
+            p = fract(p * vec2(123.34, 456.21));
+            p += dot(p, p + 45.32);
+            return fract(p.x * p.y);
+        }
+
+        void main() {
+            vec2 uv = gl_FragCoord.xy / u_resolution;
+            vec2 p = uv * 2.0 - 1.0;
+            float radius = length(p);
+            float angle = atan(p.y, p.x);
+
+            float pulse = 0.5 + 0.5 * sin(u_time * 0.15);
+            float breathingRadius = radius / (1.0 + 0.055 * pulse);
+            float drift =
+                0.008 * sin(angle * 3.0 + u_time * 0.035) +
+                0.005 * sin(angle * 7.0 - u_time * 0.022);
+
+            float rings = 0.5 + 0.5 * cos((breathingRadius + drift) * TAU * 4.65);
+            float silver = smoothstep(0.08, 0.94, rings);
+            float hardGlint = pow(rings, 12.0);
+
+            float luminance = mix(0.003, 0.68, pow(silver, 1.34));
+            luminance += hardGlint * (0.10 + 0.08 * pulse);
+
+            float centralMetal = exp(-radius * radius * 8.5);
+            luminance = mix(luminance, 0.80 + 0.08 * pulse, centralMetal * 0.66);
+
+            float vignette = smoothstep(1.52, 0.34, radius);
+            luminance *= 0.62 + 0.38 * vignette;
+
+            vec2 sparkleGrid = gl_FragCoord.xy / 18.0;
+            vec2 cell = floor(sparkleGrid);
+            vec2 point = fract(sparkleGrid) - 0.5;
+            float seed = hash21(cell);
+            float exists = step(0.997, seed);
+            float phase = hash21(cell + 17.31) * TAU;
+            float speed = 0.20 + hash21(cell + 4.73) * 0.30;
+            float twinkle = pow(0.5 + 0.5 * sin(u_time * speed + phase), 10.0);
+
+            float core = 1.0 - smoothstep(0.012, 0.105, length(point));
+            float horizontal = exp(-95.0 * abs(point.y)) * exp(-15.0 * abs(point.x));
+            float vertical = exp(-95.0 * abs(point.x)) * exp(-15.0 * abs(point.y));
+            float sparkle = exists * twinkle * max(core, (horizontal + vertical) * 0.34);
+
+            float grain = (hash21(gl_FragCoord.xy + floor(u_time * 8.0)) - 0.5) / 180.0;
+            vec3 color = vec3(luminance + sparkle * 0.92 + grain);
+
+            gl_FragColor = vec4(pow(clamp(color, 0.0, 1.0), vec3(0.94)), 1.0);
+        }
+    `;
+
+    function compile(type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            const message = gl.getShaderInfoLog(shader);
+            gl.deleteShader(shader);
+            throw new Error(message);
+        }
+
+        return shader;
     }
 
-    const random = randomGenerator(19771108);
-    const silverTones = ['#ffffff', '#e4e5e6', '#b9bcc0', '#85898e'];
+    function makeProgram() {
+        const vertexShader = compile(gl.VERTEX_SHADER, vertexSource);
+        const fragmentShader = compile(gl.FRAGMENT_SHADER, fragmentSource);
+        const program = gl.createProgram();
 
-    for (let index = 0; index < 118; index += 1) {
-        const sparkle = document.createElementNS(namespace, 'circle');
-        const bright = index % 17 === 0;
-        const radius = bright
-            ? 1.15 + random() * 1.45
-            : 0.28 + Math.pow(random(), 2.2) * 1.15;
-        const duration = 8 + random() * 18;
-        const delay = -random() * duration;
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+        gl.deleteShader(vertexShader);
+        gl.deleteShader(fragmentShader);
 
-        sparkle.setAttribute('cx', (random() * 800).toFixed(2));
-        sparkle.setAttribute('cy', (random() * 600).toFixed(2));
-        sparkle.setAttribute('r', radius.toFixed(2));
-        sparkle.setAttribute('fill', silverTones[Math.floor(random() * silverTones.length)]);
-        sparkle.setAttribute(
-            'class',
-            bright ? 'sparkle sparkle--bright' : 'sparkle'
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            const message = gl.getProgramInfoLog(program);
+            gl.deleteProgram(program);
+            throw new Error(message);
+        }
+
+        return program;
+    }
+
+    try {
+        const program = makeProgram();
+        const positionLocation = gl.getAttribLocation(program, 'a_position');
+        const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+        const timeLocation = gl.getUniformLocation(program, 'u_time');
+        const buffer = gl.createBuffer();
+        let frame = 0;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([-1, -1, 3, -1, -1, 3]),
+            gl.STATIC_DRAW
         );
-        sparkle.style.setProperty('--duration', `${duration.toFixed(2)}s`);
-        sparkle.style.setProperty('--delay', `${delay.toFixed(2)}s`);
-        sparkle.style.setProperty('--peak', (0.32 + random() * 0.62).toFixed(2));
 
-        sparkleGroup.appendChild(sparkle);
+        gl.useProgram(program);
+        gl.enableVertexAttribArray(positionLocation);
+        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+        function resize() {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const width = Math.max(1, Math.round(canvas.clientWidth * dpr));
+            const height = Math.max(1, Math.round(canvas.clientHeight * dpr));
+
+            if (canvas.width !== width || canvas.height !== height) {
+                canvas.width = width;
+                canvas.height = height;
+                gl.viewport(0, 0, width, height);
+            }
+        }
+
+        function draw(milliseconds) {
+            resize();
+            const time = reducedMotion.matches ? 0 : milliseconds * 0.001;
+            gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+            gl.uniform1f(timeLocation, time);
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+            if (!reducedMotion.matches && !document.hidden) {
+                frame = requestAnimationFrame(draw);
+            }
+        }
+
+        function start() {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', resize, { passive: true });
+        window.visualViewport?.addEventListener('resize', resize, { passive: true });
+        reducedMotion.addEventListener('change', start);
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                cancelAnimationFrame(frame);
+            } else {
+                start();
+            }
+        });
+
+        canvas.addEventListener('webglcontextlost', (event) => {
+            event.preventDefault();
+            cancelAnimationFrame(frame);
+            status.textContent = 'The WebGL field paused.';
+        });
+
+        resize();
+        start();
+    } catch (error) {
+        console.error('Unable to start the WebGL field:', error);
+        canvas.hidden = true;
+        status.textContent = 'WebGL could not start; showing the black and silver fallback.';
     }
 })();
