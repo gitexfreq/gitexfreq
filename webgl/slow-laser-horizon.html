@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evening Toadsongs II — Slow Laser Horizon & Contemplative Point Break</title>
+<style>
+  :root {
+    --laser-pink: #ff3898;
+    --sunset-amber: #ff9d42;
+    --glass: rgba(16, 6, 28, 0.74);
+  }
+  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  body, html {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: #07020d;
+    font-family: 'Courier New', Courier, monospace;
+    color: var(--sunset-amber);
+  }
+  canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    cursor: crosshair; z-index: 1;
+  }
+  #hud {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 10; width: min(94vw, 900px);
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 157, 66, 0.35);
+    border-radius: 8px; padding: 14px 20px;
+    box-shadow: 0 12px 45px rgba(0, 0, 0, 0.78), inset 0 0 25px rgba(255, 56, 152, 0.14);
+  }
+  .header-row {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px dashed rgba(255, 157, 66, 0.28);
+    padding-bottom: 6px; margin-bottom: 12px;
+    font-size: 11px; letter-spacing: 1.8px; color: #ffbfd9;
+  }
+  .controls-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+    gap: 12px; align-items: center;
+  }
+  .ctrl {
+    display: flex; flex-direction: column; gap: 4px;
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .ctrl label { display: flex; justify-content: space-between; color: #ffd2e6; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 5px; background: rgba(255, 255, 255, 0.14);
+    border-radius: 3px; outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--laser-pink);
+    box-shadow: 0 0 10px var(--sunset-amber); cursor: pointer;
+  }
+  .btn-row {
+    display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+    justify-content: space-between; align-items: center;
+  }
+  button, select {
+    background: rgba(255, 56, 152, 0.16);
+    color: var(--sunset-amber);
+    border: 1px solid rgba(255, 157, 66, 0.45);
+    padding: 6px 12px; border-radius: 4px;
+    font-family: inherit; font-size: 11px; letter-spacing: 1px;
+    cursor: pointer; text-transform: uppercase;
+    transition: all 0.25s ease;
+  }
+  button:hover, select:hover {
+    background: rgba(255, 157, 66, 0.28);
+    box-shadow: 0 0 14px rgba(255, 56, 152, 0.45);
+  }
+  button.active {
+    background: var(--laser-pink); color: #fff;
+    border-color: #fff; box-shadow: 0 0 18px var(--laser-pink);
+  }
+  .hint { font-size: 10px; color: rgba(255, 210, 185, 0.72); }
+  #overlay {
+    position: fixed; inset: 0; z-index: 20;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    background: radial-gradient(circle at center, rgba(42, 10, 52, 0.88), rgba(6, 2, 12, 0.97));
+    text-align: center; padding: 24px; cursor: pointer;
+  }
+  #overlay h1 {
+    font-size: clamp(22px, 4vw, 36px); letter-spacing: 5px;
+    margin: 0 0 10px 0;
+    background: linear-gradient(90deg, #ff9d42, #ff3898, #70f5ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  #overlay p {
+    max-width: 560px; font-size: 13px; line-height: 1.7;
+    color: #f5c6dc; margin-bottom: 26px;
+  }
+  .start-btn {
+    font-size: 13px; padding: 12px 28px;
+    background: linear-gradient(90deg, var(--laser-pink), var(--sunset-amber));
+    color: #14041d; font-weight: bold; border: none; border-radius: 4px;
+    box-shadow: 0 0 28px rgba(255, 56, 152, 0.65);
+  }
+
+.archive-nav{position:fixed;top:12px;left:12px;right:12px;z-index:30;display:flex;gap:12px;align-items:center;flex-wrap:wrap;width:fit-content;max-width:calc(100% - 24px);padding:8px 12px;border:1px solid #9b667e;border-radius:8px;background:#180b24ee;color:#ffdb83;font:12px system-ui}
+.archive-nav a{color:inherit}.archive-nav label{display:flex;align-items:center;gap:6px}.archive-nav input{width:80px}canvas{touch-action:none}#hud{max-height:52vh;overflow:auto}.header-row{gap:10px;flex-wrap:wrap}#overlay{padding-top:90px;overflow:auto}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #fff;outline-offset:3px}
+</style>
+</head>
+<body><nav class="archive-nav" aria-label="Artwork navigation"><a href="/webgl/">← Archive</a><label>Volume <input id="archive-volume" aria-label="Master volume" type="range" min="0" max="0.5" step="0.01" value="0.12"></label><button id="archive-mute" aria-pressed="false">Mute</button></nav>
+
+<canvas id="glcanvas"></canvas>
+
+<div id="overlay">
+  <h1>EVENING TOADSONGS // SLOW HORIZON</h1>
+  <p>Ultra-Slow Contemplative Point-Break Shader &amp; Elongated Laser Lead Instrument.<br>
+  Sweep slowly across the sea or hold keys <b>[A–L]</b> to bend long, resonant laser ribbons into the sunset swell.</p>
+  <p style="margin:0 0 12px">Sound starts only when you press play. Initial volume: 12%.</p><button class="start-btn">ENTER CONTEMPLATIVE STATE</button>
+</div>
+
+<div id="hud">
+  <div class="header-row">
+    <span>TEMPO: ULTRA-SLOW CONTEMPLATIVE // ELONGATED LASER LEAD</span>
+    <span id="note-readout">LASER: 165.0 HZ</span>
+  </div>
+
+  <div class="controls-grid">
+    <div class="ctrl">
+      <label><span>Glide Time</span><span id="val-glide">1.65s</span></label>
+      <input type="range" id="glide" min="0.2" max="4.5" step="0.05" value="1.65">
+    </div>
+    <div class="ctrl">
+      <label><span>Laser Sweep</span><span id="val-laser">0.78</span></label>
+      <input type="range" id="laser" min="0.1" max="1.0" step="0.01" value="0.78">
+    </div>
+    <div class="ctrl">
+      <label><span>Sustain Tail</span><span id="val-release">3.8s</span></label>
+      <input type="range" id="release" min="0.8" max="7.0" step="0.1" value="3.8">
+    </div>
+    <div class="ctrl">
+      <label><span>Swell Peel</span><span id="val-curl">0.72</span></label>
+      <input type="range" id="curl" min="0.15" max="1.2" step="0.01" value="0.72">
+    </div>
+    <div class="ctrl">
+      <label><span>Canyon Echo</span><span id="val-delay">0.78</span></label>
+      <input type="range" id="delay" min="0.1" max="0.92" step="0.01" value="0.78">
+    </div>
+    <div class="ctrl">
+      <label><span>Scale Tuning</span></label>
+      <select id="scale">
+        <option value="lydian">Soaring into Sunrise (Lydian)</option>
+        <option value="hirajoshi">Moonrise Over Toadscapes (Hirajoshi)</option>
+        <option value="just">Solstice Temple (7-Limit Just)</option>
+        <option value="mixolydian">Colo River Float (Mixolydian)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <div>
+      <button id="btn-drift" class="active">SLOW HORIZON DRIFT: ON</button>
+      <button id="btn-drone" class="active">SUB-TIDE PAD: ON</button>
+      <button id="btn-toads" class="active">DEEP TOADS: ON</button>
+    </div>
+    <span class="hint">Drag X: Elongated Laser Pitch | Drag Y: Resonance &amp; Horizon | Keys: A-L</span>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// 1. WEBGL 2.0 SLOW-MOTION POINT BREAK & ELONGATED LASER SHADER
+// ============================================================================
+const canvas = document.getElementById('glcanvas');
+const gl = canvas.getContext('webgl2', { antialias: false });
+if (!gl) { document.querySelector('#overlay p').textContent = 'This artwork needs WebGL 2. Please try a browser with graphics acceleration enabled.'; document.querySelector('.start-btn').disabled = true; throw new Error('WebGL 2 unavailable'); }
+
+const vsSource = `#version 300 es
+in vec2 a_pos;
+out vec2 v_uv;
+void main() {
+  v_uv = a_pos * 0.5 + 0.5;
+  gl_Position = vec4(a_pos, 0.0, 1.0);
+}`;
+
+const fsSource = `#version 300 es
+precision highp float;
+in vec2 v_uv;
+out vec4 fragColor;
+
+uniform vec2 u_res;
+uniform float u_time;
+uniform vec2 u_mouse;
+uniform float u_laserPitch;
+uniform float u_laserEnv;
+uniform float u_curl;
+uniform float u_bass;
+uniform float u_mid;
+uniform float u_high;
+
+float hash(vec2 p) {
+  p = fract(p * vec2(123.34, 456.21));
+  p += dot(p, p + 45.32);
+  return fract(p.x * p.y);
+}
+
+float noise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+    u.y
+  );
+}
+
+float fbm(vec2 p) {
+  float v = 0.0;
+  float a = 0.5;
+  mat2 rot = mat2(cos(0.48), sin(0.48), -sin(0.48), cos(0.48));
+  for (int i = 0; i < 5; i++) {
+    v += a * noise(p);
+    p = rot * p * 2.02 + vec2(2.1, 7.4);
+    a *= 0.5;
+  }
+  return v;
+}
+
+// Ultra-Slow Contemplative Peeling Point Break Field
+vec3 waveField(vec2 p, float t) {
+  // Super slow, meditative groundswell speed
+  float peelSpeed = t * 0.42;
+  float swellPhase = p.y * 0.55 - p.x * 0.32 + peelSpeed;
+
+  // Long-period ocean swell trains
+  float w1 = sin(swellPhase * 2.6);
+  float crest = pow(max(0.0, w1 * 0.5 + 0.5), 2.5 - u_curl * 0.85);
+
+  // Slow-peeling point break pocket gliding across the point
+  float pocketX = sin(swellPhase * 1.15 - t * 0.28) * 3.2;
+  float pocketMask = exp(-pow((p.x - pocketX) * 0.38, 2.0));
+
+  float audioLift = u_bass * 0.45 + u_mid * 0.6;
+  float tubeCurl = crest * pocketMask * (u_curl + audioLift * 0.8);
+
+  // Glassy, long-wavelength domain-warped ripples
+  vec2 warp = vec2(fbm(p * 0.45 + t * 0.09), fbm(p * 0.45 - t * 0.08));
+  float detail = fbm(p * 1.25 + warp * (1.1 + u_high * 1.6) + vec2(peelSpeed * 0.4, 0.0));
+
+  float height = crest * (0.95 + audioLift * 0.5) + tubeCurl * 0.72 + detail * 0.22;
+  float foam = smoothstep(0.64 - u_high * 0.22, 1.08, tubeCurl + detail * 0.48);
+
+  return vec3(height, foam, tubeCurl);
+}
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy - 0.5 * u_res) / u_res.y;
+  float t = u_time;
+
+  float horizon = -0.03 + (u_mouse.y - 0.5) * 0.1;
+  vec3 ro = vec3(0.0, 1.55 + u_bass * 0.15, -3.6);
+  vec3 rd = normalize(vec3(uv.x, uv.y - horizon, 1.3));
+
+  // ------------------------------------------------------------------
+  // 1. CONTEMPLATIVE PINK-ORANGE SUNSET & ELONGATED LASER RIBBONS
+  // ------------------------------------------------------------------
+  vec2 sunPos = vec2((u_laserPitch - 0.5) * 0.55, 0.14 + sin(t * 0.06) * 0.02);
+  float sunDist = length(uv - sunPos);
+
+  vec3 skyTop = vec3(0.09, 0.02, 0.22);
+  vec3 skyMid = vec3(0.84, 0.18, 0.46);
+  vec3 skyLow = vec3(1.00, 0.56, 0.20);
+  float skyGrad = clamp((uv.y - horizon) * 1.75, 0.0, 1.0);
+  vec3 skyCol = mix(skyLow, skyMid, smoothstep(0.0, 0.45, skyGrad));
+  skyCol = mix(skyCol, skyTop, smoothstep(0.45, 1.0, skyGrad));
+
+  // Slow-drifting psychedelic dusk clouds
+  vec2 cloudUV = uv * vec2(1.3, 3.2) + vec2(t * 0.012, -t * 0.006);
+  float cl = fbm(cloudUV + fbm(cloudUV + t * 0.015));
+  skyCol = mix(skyCol, vec3(1.0, 0.35, 0.58), cl * 0.42 * (1.0 - skyGrad * 0.55));
+
+  // Warm setting sun disc
+  float sunRadius = 0.22 + u_mid * 0.03;
+  float sunDisc = smoothstep(sunRadius, sunRadius - 0.01, sunDist);
+  vec3 sunCol = mix(vec3(1.0, 0.25, 0.55), vec3(1.0, 0.92, 0.55), clamp((uv.y - sunPos.y + sunRadius) / (2.0 * sunRadius), 0.0, 1.0));
+  skyCol += vec3(1.0, 0.42, 0.22) * (0.05 / (sunDist + 0.045));
+  skyCol = mix(skyCol, sunCol, sunDisc);
+
+  // ELONGATED SYNTH LASER BEAMS ACROSS THE SKY
+  float beamY1 = horizon + 0.12 + (u_laserPitch - 0.5) * 0.22 + sin(uv.x * 3.5 + t * 0.45) * 0.045;
+  float beamY2 = horizon + 0.20 - (u_laserPitch - 0.5) * 0.18 + cos(uv.x * 2.4 - t * 0.35) * 0.06;
+  float laser1 = (0.0028 * (0.4 + u_laserEnv * 1.4)) / (abs(uv.y - beamY1) + 0.0022);
+  float laser2 = (0.0018 * (0.3 + u_mid * 1.5)) / (abs(uv.y - beamY2) + 0.0028);
+
+  vec3 laserCol1 = mix(vec3(1.0, 0.2, 0.65), vec3(0.35, 0.96, 1.0), sin(uv.x * 2.0 + t * 0.5) * 0.5 + 0.5);
+  vec3 laserCol2 = vec3(1.0, 0.68, 0.25);
+
+  if (uv.y > horizon - 0.02) {
+    skyCol += laserCol1 * clamp(laser1, 0.0, 2.5);
+    skyCol += laserCol2 * clamp(laser2, 0.0, 1.8);
+  }
+
+  vec3 col = skyCol;
+
+  // ------------------------------------------------------------------
+  // 2. GLASSY SLOW-PEELING POINT BREAK OCEAN
+  // ------------------------------------------------------------------
+  if (rd.y < 0.08) {
+    float dist = 0.4;
+    float hit = 0.0;
+    vec3 p;
+    vec3 wf;
+
+    for (int i = 0; i < 30; i++) {
+      p = ro + rd * dist;
+      wf = waveField(p.xz, t);
+      float hDiff = p.y - wf.x;
+      if (hDiff < 0.014 || dist > 28.0) {
+        hit = 1.0;
+        break;
+      }
+      dist += max(0.055, hDiff * 0.46);
+    }
+
+    if (hit > 0.5 && dist <= 28.0) {
+      vec2 eps = vec2(0.045, 0.0);
+      float hL = waveField(p.xz - eps.xy, t).x;
+      float hR = waveField(p.xz + eps.xy, t).x;
+      float hD = waveField(p.xz - eps.yx, t).x;
+      float hU = waveField(p.xz + eps.yx, t).x;
+      vec3 norm = normalize(vec3(hL - hR, 0.15, hD - hU));
+
+      vec3 viewDir = -rd;
+      float fresnel = pow(1.0 - max(0.0, dot(norm, viewDir)), 4.2);
+      vec3 reflDir = reflect(rd, norm);
+
+      // Deep twilight violet sea & glowing magenta-amber wave face
+      vec3 deepSea = vec3(0.05, 0.02, 0.15);
+      vec3 curlGlow = mix(vec3(0.12, 0.75, 0.82), vec3(1.0, 0.28, 0.65), 0.55);
+
+      float sss = clamp(wf.z * 1.4 + max(0.0, norm.y) * 0.35, 0.0, 1.0);
+      vec3 waterCol = mix(deepSea, curlGlow, sss * 0.78);
+
+      // Sunset & Laser reflections on the peeling glassy face
+      vec3 sunDir = normalize(vec3(sunPos.x, max(0.04, sunPos.y), 1.0));
+      float spec = pow(max(0.0, dot(reflDir, sunDir)), 42.0);
+      vec3 reflCol = mix(vec3(0.95, 0.22, 0.58), vec3(1.0, 0.75, 0.32), fresnel);
+
+      waterCol = mix(waterCol, reflCol, clamp(fresnel * 0.88, 0.0, 1.0));
+      waterCol += vec3(1.0, 0.82, 0.45) * spec * (1.5 + u_laserEnv * 1.3);
+
+      // Reflected elongated laser shimmer along the wave crest
+      float crestLaser = exp(-abs(p.x - (u_laserPitch - 0.5) * 6.0) * 0.65) * wf.z;
+      waterCol += laserCol1 * crestLaser * (0.65 + u_laserEnv * 1.1);
+
+      // Iridescent slow-peeling whitewater lip
+      vec3 foamCol = mix(vec3(1.0, 0.84, 0.92), vec3(0.48, 0.96, 1.0), sin(p.x * 1.5 + t * 1.2) * 0.5 + 0.5);
+      waterCol = mix(waterCol, foamCol, clamp(wf.y, 0.0, 1.0));
+
+      float fog = exp(-dist * 0.08);
+      col = mix(skyLow, waterCol, fog);
+    }
+  }
+
+  // Subtle warm analog tape scanline & soft contrast
+  col += sin(gl_FragCoord.y * 1.6) * 0.018;
+  col = pow(max(col, vec3(0.0)), vec3(0.92));
+
+  fragColor = vec4(col, 1.0);
+}`;
+
+function compileShader(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+    console.error(gl.getShaderInfoLog(s));
+  }
+  return s;
+}
+
+const prog = gl.createProgram();
+gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, vsSource));
+gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, fsSource));
+gl.linkProgram(prog);
+gl.useProgram(prog);
+
+const quadBuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+const aPos = gl.getAttribLocation(prog, 'a_pos');
+gl.enableVertexAttribArray(aPos);
+gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+const uniforms = {
+  res: gl.getUniformLocation(prog, 'u_res'),
+  time: gl.getUniformLocation(prog, 'u_time'),
+  mouse: gl.getUniformLocation(prog, 'u_mouse'),
+  laserPitch: gl.getUniformLocation(prog, 'u_laserPitch'),
+  laserEnv: gl.getUniformLocation(prog, 'u_laserEnv'),
+  curl: gl.getUniformLocation(prog, 'u_curl'),
+  bass: gl.getUniformLocation(prog, 'u_bass'),
+  mid: gl.getUniformLocation(prog, 'u_mid'),
+  high: gl.getUniformLocation(prog, 'u_high'),
+};
+
+function resize() {
+  canvas.width = window.innerWidth * Math.min(window.devicePixelRatio, 1.5);
+  canvas.height = window.innerHeight * Math.min(window.devicePixelRatio, 1.5);
+  gl.viewport(0, 0, canvas.width, canvas.height);
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ============================================================================
+// 2. ELONGATED LASER LEAD & ULTRA-SLOW CONTEMPLATIVE AUDIO ENGINE
+// ============================================================================
+let actx = null;
+let archiveMaster = null, archiveMuted = false;
+let analyser = null;
+let freqData = null;
+
+let osc1, osc2, subOsc, laserFilter1, laserFilter2, leadVca, delayFb, droneGain;
+let isStarted = false;
+let isPointerDown = false;
+let driftEnabled = true;
+let droneEnabled = true;
+let toadsEnabled = true;
+let driftTimer = null;
+let toadTimer = null;
+
+const mouse = { x: 0.5, y: 0.5 };
+let currentNormPitch = 0.45;
+let visualLaserEnv = 0.0;
+
+const SCALES = {
+  lydian:     [1.0, 9/8, 5/4, 45/32, 3/2, 27/16, 15/8, 2.0],
+  hirajoshi:  [1.0, 9/8, 6/5, 3/2, 8/5, 2.0, 9/4, 12/5],
+  just:       [1.0, 8/7, 7/6, 4/3, 3/2, 12/7, 7/4, 2.0],
+  mixolydian: [1.0, 9/8, 5/4, 4/3, 3/2, 5/3, 9/5, 2.0]
+};
+
+function makeSoftClipCurve(amount) {
+  const n = 8192;
+  const curve = new Float32Array(n);
+  const k = 1 + amount * 10;
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2) / n - 1;
+    curve[i] = Math.tanh(x * k) / Math.tanh(k);
+  }
+  return curve;
+}
+
+function initAudio() {
+  if (isStarted) return;
+  actx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = actx.createAnalyser();
+  analyser.fftSize = 512;
+  analyser.smoothingTimeConstant = 0.9;
+  freqData = new Uint8Array(analyser.frequencyBinCount);
+
+  const tapeShaper = actx.createWaveShaper();
+  tapeShaper.curve = makeSoftClipCurve(0.6);
+  tapeShaper.oversample = '2x';
+
+  const masterGain = actx.createGain();
+  archiveMaster = masterGain;
+  masterGain.gain.value = archiveMuted ? 0 : Number(document.getElementById('archive-volume').value);
+
+  // 4-Stage Allpass Phaser for Liquid Laser Shimmer
+  const allpassStages = [];
+  const phaserLfo = actx.createOscillator();
+  phaserLfo.frequency.value = 0.14; // Very slow contemplative sweep
+  const phaserDepth = actx.createGain();
+  phaserDepth.gain.value = 550;
+  phaserLfo.connect(phaserDepth);
+  phaserLfo.start();
+
+  for (let i = 0; i < 4; i++) {
+    const ap = actx.createBiquadFilter();
+    ap.type = 'allpass';
+    ap.frequency.value = 700 + i * 350;
+    ap.Q.value = 2.2;
+    phaserDepth.connect(ap.frequency);
+    if (i > 0) allpassStages[i - 1].connect(ap);
+    allpassStages.push(ap);
+  }
+
+  // Ultra-Long Canyon Stereo Tape Delay (1.1s / 1.45s)
+  const delayL = actx.createDelay(4.0);
+  const delayR = actx.createDelay(4.0);
+  delayL.delayTime.value = 1.08;
+  delayR.delayTime.value = 1.44;
+
+  const wowLfo = actx.createOscillator();
+  const wowDepth = actx.createGain();
+  wowLfo.frequency.value = 0.28;
+  wowDepth.gain.value = 0.0035;
+  wowLfo.connect(wowDepth);
+  wowDepth.connect(delayL.delayTime);
+  wowDepth.connect(delayR.delayTime);
+  wowLfo.start();
+
+  delayFb = actx.createGain();
+  delayFb.gain.value = parseFloat(document.getElementById('delay').value);
+
+  const echoTone = actx.createBiquadFilter();
+  echoTone.type = 'lowpass';
+  echoTone.frequency.value = 1950;
+
+  delayL.connect(delayR);
+  delayR.connect(echoTone);
+  echoTone.connect(delayFb);
+  delayFb.connect(delayL);
+
+  // --- ELONGATED LASER SYNTH LEAD VOICE ---
+  osc1 = actx.createOscillator();
+  osc2 = actx.createOscillator();
+  subOsc = actx.createOscillator();
+  osc1.type = 'sawtooth';
+  osc2.type = 'sawtooth';
+  subOsc.type = 'triangle';
+
+  osc1.frequency.value = 165.0;
+  osc2.frequency.value = 165.0 * 1.006;
+  subOsc.frequency.value = 82.5;
+
+  // Slow pitch-bend vibrato
+  const vibLfo = actx.createOscillator();
+  const vibGain = actx.createGain();
+  vibLfo.frequency.value = 3.4;
+  vibGain.gain.value = 1.9;
+  vibLfo.connect(vibGain);
+  vibGain.connect(osc1.frequency);
+  vibGain.connect(osc2.frequency);
+  vibLfo.start();
+
+  // Dual Series Resonant Filter for Liquid "Laser" Tone
+  laserFilter1 = actx.createBiquadFilter();
+  laserFilter1.type = 'lowpass';
+  laserFilter1.frequency.value = 900;
+  laserFilter1.Q.value = 7.5; // High Q for singing laser resonance
+
+  laserFilter2 = actx.createBiquadFilter();
+  laserFilter2.type = 'lowpass';
+  laserFilter2.frequency.value = 1800;
+  laserFilter2.Q.value = 2.0;
+
+  leadVca = actx.createGain();
+  leadVca.gain.value = 0.0;
+
+  const subGain = actx.createGain();
+  subGain.gain.value = 0.45;
+
+  osc1.connect(laserFilter1);
+  osc2.connect(laserFilter1);
+  subOsc.connect(subGain);
+  subGain.connect(laserFilter1);
+
+  laserFilter1.connect(laserFilter2);
+  laserFilter2.connect(leadVca);
+
+  // Route through Phaser + Dry + Canyon Delay
+  leadVca.connect(tapeShaper);
+  leadVca.connect(allpassStages[0]);
+  allpassStages[3].connect(tapeShaper);
+  allpassStages[3].connect(delayL);
+
+  osc1.start();
+  osc2.start();
+  subOsc.start();
+
+  // --- CONTEMPLATIVE SUB-TIDE PAD DRONE (E2 + B2 + F#3 + G#3) ---
+  droneGain = actx.createGain();
+  droneGain.gain.value = 0.16;
+  const droneFilter = actx.createBiquadFilter();
+  droneFilter.type = 'lowpass';
+  droneFilter.frequency.value = 320;
+
+  [82.5, 123.75, 185.62, 206.25].forEach((freq, idx) => {
+    const o = actx.createOscillator();
+    o.type = idx % 2 === 0 ? 'triangle' : 'sawtooth';
+    o.frequency.value = freq + (idx - 1.5) * 0.25;
+    o.connect(droneFilter);
+    o.start();
+  });
+  droneFilter.connect(droneGain);
+  droneGain.connect(tapeShaper);
+  droneGain.connect(delayL);
+
+  delayL.connect(tapeShaper);
+  delayR.connect(tapeShaper);
+  tapeShaper.connect(masterGain);
+  masterGain.connect(analyser);
+  analyser.connect(actx.destination);
+
+  isStarted = true;
+  startSlowHorizonDrift();
+  scheduleSlowToads();
+}
+
+function getQuantizedFreq(normX) {
+  const scaleKey = document.getElementById('scale').value;
+  const ratios = SCALES[scaleKey];
+  const baseFreq = 138.59; // Deep C#3 / D-flat meditative root
+  const totalNotes = ratios.length * 2;
+  const idx = Math.floor(Math.max(0, Math.min(0.999, normX)) * totalNotes);
+  const octave = Math.floor(idx / ratios.length);
+  const degree = idx % ratios.length;
+  return baseFreq * ratios[degree] * Math.pow(2, octave);
+}
+
+// Trigger an elongated laser tone with slow portamento + resonant sweep
+function triggerLaserLead(normX, normY, isAutoStep = false) {
+  if (!isStarted) return;
+  const now = actx.currentTime;
+  const glide = parseFloat(document.getElementById('glide').value);
+  const laserAmt = parseFloat(document.getElementById('laser').value);
+  const freq = getQuantizedFreq(normX);
+
+  currentNormPitch = normX;
+  visualLaserEnv = 1.0;
+
+  // Long, liquid pitch glide
+  const portamento = glide * 0.42;
+  osc1.frequency.setTargetAtTime(freq, now, portamento);
+  osc2.frequency.setTargetAtTime(freq * 1.006, now, portamento);
+  subOsc.frequency.setTargetAtTime(freq * 0.5, now, portamento);
+
+  // Elongated Laser Filter Sweep: starts high with resonant peak, glides slowly down
+  const baseCutoff = 260 + (1.0 - normY) * 1600;
+  const peakCutoff = baseCutoff + laserAmt * 3400;
+
+  laserFilter1.Q.setTargetAtTime(5.0 + laserAmt * 8.5, now, 0.08);
+  laserFilter1.frequency.cancelScheduledValues(now);
+  laserFilter1.frequency.setValueAtTime(laserFilter1.frequency.value, now);
+  laserFilter1.frequency.exponentialRampToValueAtTime(peakCutoff, now + 0.18);
+  laserFilter1.frequency.setTargetAtTime(baseCutoff, now + 0.2, glide * 0.75 + 0.6);
+
+  // Swelling contemplative VCA attack
+  leadVca.gain.cancelScheduledValues(now);
+  leadVca.gain.setTargetAtTime(0.28, now, 0.35);
+
+  if (isAutoStep && !isPointerDown) {
+    const rel = parseFloat(document.getElementById('release').value);
+    leadVca.gain.setTargetAtTime(0.06, now + 1.4, rel * 0.55);
+  }
+
+  document.getElementById('note-readout').textContent = `LASER: ${freq.toFixed(1)} HZ`;
+}
+
+function releaseLaserLead() {
+  if (!isStarted) return;
+  const now = actx.currentTime;
+  const rel = parseFloat(document.getElementById('release').value);
+  leadVca.gain.cancelScheduledValues(now);
+  leadVca.gain.setTargetAtTime(driftEnabled ? 0.05 : 0.0, now, rel * 0.45);
+}
+
+// Ultra-Slow Meditative Horizon Sequencer (steps every 4.2 seconds)
+function startSlowHorizonDrift() {
+  if (driftTimer) clearInterval(driftTimer);
+  let step = 0;
+  const phrases = [0.12, 0.38, 0.25, 0.64, 0.52, 0.82, 0.44, 0.18];
+  driftTimer = setInterval(() => {
+    if (!driftEnabled || isPointerDown) return;
+    const nx = phrases[step % phrases.length];
+    const ny = 0.35 + Math.sin(step * 0.9) * 0.2;
+    triggerLaserLead(nx, ny, true);
+    step++;
+  }, 4200);
+}
+
+// Slow-Motion Nocturnal Toad Resonator
+function triggerDeepToad() {
+  if (!isStarted || !toadsEnabled) return;
+  const now = actx.currentTime;
+  const carrier = actx.createOscillator();
+  const mod = actx.createOscillator();
+  const modGain = actx.createGain();
+  const filter = actx.createBiquadFilter();
+  const env = actx.createGain();
+
+  // Deeper, slower, elongated amphibian call
+  const basePitch = 140 + Math.random() * 130;
+  carrier.type = 'triangle';
+  carrier.frequency.setValueAtTime(basePitch, now);
+  carrier.frequency.exponentialRampToValueAtTime(basePitch * 1.32, now + 0.45);
+  carrier.frequency.exponentialRampToValueAtTime(basePitch * 0.78, now + 1.15);
+
+  mod.type = 'sine';
+  mod.frequency.value = 16 + Math.random() * 9; // Slow throat pulse
+  modGain.gain.value = 65;
+
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(420, now);
+  filter.frequency.exponentialRampToValueAtTime(980, now + 0.55);
+  filter.Q.value = 7.5;
+
+  env.gain.setValueAtTime(0.001, now);
+  env.gain.linearRampToValueAtTime(0.12, now + 0.18);
+  env.gain.exponentialRampToValueAtTime(0.0008, now + 1.25);
+
+  mod.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(filter);
+  filter.connect(env);
+  env.connect(delayFb);
+
+  carrier.start(now);
+  mod.start(now);
+  carrier.stop(now + 1.3);
+  mod.stop(now + 1.3);
+}
+
+function scheduleSlowToads() {
+  if (toadTimer) clearTimeout(toadTimer);
+  const nextMs = 3800 + Math.random() * 5200;
+  toadTimer = setTimeout(() => {
+    if (toadsEnabled) triggerDeepToad();
+    scheduleSlowToads();
+  }, nextMs);
+}
+
+// ============================================================================
+// 3. INTERACTION & HUD BINDINGS
+// ============================================================================
+document.querySelector('.start-btn').addEventListener('click', (e) => {
+  initAudio();
+  document.getElementById('overlay').style.display = 'none';
+  triggerLaserLead(0.35, 0.4, true);
+});
+
+canvas.addEventListener('pointerdown', (e) => {
+  initAudio();
+  isPointerDown = true;
+  mouse.x = e.clientX / window.innerWidth;
+  mouse.y = e.clientY / window.innerHeight;
+  triggerLaserLead(mouse.x, mouse.y, false);
+});
+
+window.addEventListener('pointermove', (e) => {
+  mouse.x = e.clientX / window.innerWidth;
+  mouse.y = e.clientY / window.innerHeight;
+  if (isPointerDown) triggerLaserLead(mouse.x, mouse.y, false);
+});
+
+window.addEventListener('pointerup', () => {
+  isPointerDown = false;
+  releaseLaserLead();
+});
+
+const KEY_MAP = 'awsedftgyhujkolp;';
+window.addEventListener('keydown', (e) => {
+  if (e.repeat || e.target.closest('input,select,button,a') || document.getElementById('overlay').style.display !== 'none') return;
+  const idx = KEY_MAP.indexOf(e.key.toLowerCase());
+  if (idx !== -1) {
+    initAudio();
+    const normX = idx / (KEY_MAP.length - 1);
+    mouse.x = normX;
+    isPointerDown = true;
+    triggerLaserLead(normX, mouse.y, false);
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  if (KEY_MAP.includes(e.key.toLowerCase())) {
+    isPointerDown = false;
+    releaseLaserLead();
+  }
+});
+
+const bindSlider = (id, labelId, suffix, cb) => {
+  const el = document.getElementById(id);
+  const lbl = document.getElementById(labelId);
+  el.addEventListener('input', () => {
+    lbl.textContent = el.value + suffix;
+    if (cb) cb(parseFloat(el.value));
+  });
+};
+
+bindSlider('glide', 'val-glide', 's');
+bindSlider('laser', 'val-laser', '');
+bindSlider('release', 'val-release', 's');
+bindSlider('curl', 'val-curl', '');
+bindSlider('delay', 'val-delay', '', (v) => { if (delayFb) delayFb.gain.value = v; });
+
+document.getElementById('btn-drift').addEventListener('click', (e) => {
+  initAudio();
+  driftEnabled = !driftEnabled;
+  e.target.classList.toggle('active', driftEnabled);
+  e.target.textContent = `SLOW HORIZON DRIFT: ${driftEnabled ? 'ON' : 'OFF'}`;
+  if (!driftEnabled && !isPointerDown) releaseLaserLead();
+});
+
+document.getElementById('btn-drone').addEventListener('click', (e) => {
+  droneEnabled = !droneEnabled;
+  e.target.classList.toggle('active', droneEnabled);
+  e.target.textContent = `SUB-TIDE PAD: ${droneEnabled ? 'ON' : 'OFF'}`;
+  if (droneGain) droneGain.gain.setTargetAtTime(droneEnabled ? 0.16 : 0.0, actx.currentTime, 0.5);
+});
+
+document.getElementById('btn-toads').addEventListener('click', (e) => {
+  toadsEnabled = !toadsEnabled;
+  e.target.classList.toggle('active', toadsEnabled);
+  e.target.textContent = `DEEP TOADS: ${toadsEnabled ? 'ON' : 'OFF'}`;
+});
+
+// ============================================================================
+// 4. RENDER & FFT MODULATION LOOP
+// ============================================================================
+let smoothBass = 0, smoothMid = 0, smoothHigh = 0;
+let smoothPitch = 0.45;
+
+function render(nowMs) {
+  const t = nowMs * 0.001;
+
+  if (isStarted && analyser) {
+    analyser.getByteFrequencyData(freqData);
+    let b = 0, m = 0, h = 0;
+    for (let i = 0; i < 12; i++) b += freqData[i];
+    for (let i = 12; i < 55; i++) m += freqData[i];
+    for (let i = 55; i < 140; i++) h += freqData[i];
+    smoothBass = smoothBass * 0.92 + (b / (12 * 255)) * 0.08;
+    smoothMid  = smoothMid  * 0.92 + (m / (43 * 255)) * 0.08;
+    smoothHigh = smoothHigh * 0.92 + (h / (85 * 255)) * 0.08;
+  }
+
+  // Smoothly interpolate visual laser ribbon position & decay
+  smoothPitch = smoothPitch * 0.96 + currentNormPitch * 0.04;
+  visualLaserEnv *= isPointerDown ? 0.992 : 0.975;
+
+  gl.uniform2f(uniforms.res, canvas.width, canvas.height);
+  gl.uniform1f(uniforms.time, t);
+  gl.uniform2f(uniforms.mouse, mouse.x, 1.0 - mouse.y);
+  gl.uniform1f(uniforms.laserPitch, smoothPitch);
+  gl.uniform1f(uniforms.laserEnv, visualLaserEnv);
+  gl.uniform1f(uniforms.curl, parseFloat(document.getElementById('curl').value));
+  gl.uniform1f(uniforms.bass, smoothBass);
+  gl.uniform1f(uniforms.mid, smoothMid);
+  gl.uniform1f(uniforms.high, smoothHigh);
+
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+
+function archiveVolume(){if(archiveMaster) archiveMaster.gain.setTargetAtTime(archiveMuted ? 0 : Number(document.getElementById('archive-volume').value),actx.currentTime,0.05);}
+document.getElementById('archive-volume').addEventListener('input', archiveVolume);
+document.getElementById('archive-mute').addEventListener('click', e=>{archiveMuted=!archiveMuted;archiveVolume();e.currentTarget.textContent=archiveMuted?'Unmute':'Mute';e.currentTarget.setAttribute('aria-pressed',String(archiveMuted));});
+document.addEventListener('visibilitychange',()=>{if(document.hidden && archiveMaster){archiveMuted=true;archiveVolume();document.getElementById('archive-mute').textContent='Unmute';document.getElementById('archive-mute').setAttribute('aria-pressed','true');}});
+</script>
+</body>
+</html>

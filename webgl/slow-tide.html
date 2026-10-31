@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RN-3 // EVENING TOADSONGS (1987) — Slow Tide · 36 BPM</title>
+<style>
+  :root {
+    --sunset-gold: #ffae52;
+    --sunset-pink: #ff4d88;
+    --deep-violet: #1c0b2b;
+    --glass: rgba(22, 10, 36, 0.72);
+  }
+  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  body, html {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: #0a0412;
+    font-family: 'Courier New', Courier, monospace;
+    color: var(--sunset-gold);
+  }
+  canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    cursor: crosshair; z-index: 1;
+  }
+  #hud {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 10; width: min(94vw, 940px); max-height: 58vh; overflow-y: auto;
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 174, 82, 0.35);
+    border-radius: 8px; padding: 14px 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(255, 77, 136, 0.15);
+    transition: opacity 0.3s ease;
+  }
+  .header-row {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px dashed rgba(255, 174, 82, 0.3);
+    padding-bottom: 8px; margin-bottom: 12px;
+    font-size: 12px; letter-spacing: 1.5px;
+  }
+  .catalog-badge {
+    background: linear-gradient(90deg, var(--sunset-pink), var(--sunset-gold));
+    color: #12051c; font-weight: bold; padding: 2px 8px; border-radius: 3px;
+  }
+  .controls-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px; align-items: center;
+  }
+  .ctrl {
+    display: flex; flex-direction: column; gap: 4px;
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .ctrl label { display: flex; justify-content: space-between; color: #ffccd9; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 5px; background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px; outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--sunset-gold);
+    box-shadow: 0 0 8px var(--sunset-pink); cursor: pointer;
+  }
+  .btn-row {
+    display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+    justify-content: space-between; align-items: center;
+  }
+  button, select {
+    background: rgba(255, 77, 136, 0.18);
+    color: var(--sunset-gold);
+    border: 1px solid rgba(255, 174, 82, 0.5);
+    padding: 6px 12px; border-radius: 4px;
+    font-family: inherit; font-size: 11px; letter-spacing: 1px;
+    cursor: pointer; text-transform: uppercase;
+    transition: all 0.2s ease;
+  }
+  button:hover, select:hover {
+    background: rgba(255, 174, 82, 0.3);
+    box-shadow: 0 0 12px rgba(255, 77, 136, 0.4);
+  }
+  button.active {
+    background: var(--sunset-pink); color: #fff;
+    border-color: #fff; box-shadow: 0 0 15px var(--sunset-pink);
+  }
+  .scene-note { font-size: 11px; line-height: 1.6; color: #f3c6d3; margin: 0 0 14px; }
+  input:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid #ffd56b; outline-offset: 4px; }
+  .hint { font-size: 10px; color: rgba(255, 210, 180, 0.7); }
+  #overlay {
+    position: fixed; inset: 0; z-index: 20;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    background: radial-gradient(circle at center, rgba(45, 12, 58, 0.85), rgba(8, 2, 15, 0.96));
+    text-align: center; padding: 24px; cursor: pointer;
+  }
+  #overlay h1 {
+    font-size: clamp(22px, 4vw, 38px); letter-spacing: 4px;
+    margin: 0 0 10px 0;
+    background: linear-gradient(90deg, #ff7b54, #ff4d88, #ffd56b);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  #overlay p {
+    max-width: 540px; font-size: 13px; line-height: 1.6;
+    color: #f3c6d3; margin-bottom: 24px;
+  }
+  .start-btn {
+    font-size: 14px; padding: 12px 28px;
+    background: linear-gradient(90deg, var(--sunset-pink), var(--sunset-gold));
+    color: #160521; font-weight: bold; border: none; border-radius: 4px;
+    box-shadow: 0 0 25px rgba(255, 77, 136, 0.6);
+  }
+
+.archive-nav{position:fixed;top:12px;left:12px;right:12px;z-index:30;display:flex;gap:12px;align-items:center;flex-wrap:wrap;width:fit-content;max-width:calc(100% - 24px);padding:8px 12px;border:1px solid #9b667e;border-radius:8px;background:#180b24ee;color:#ffdb83;font:12px system-ui}
+.archive-nav a{color:inherit}.archive-nav label{display:flex;align-items:center;gap:6px}.archive-nav input{width:80px}canvas{touch-action:none}#hud{max-height:52vh;overflow:auto}.header-row{gap:10px;flex-wrap:wrap}#overlay{padding-top:90px;overflow:auto}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #fff;outline-offset:3px}
+</style>
+</head>
+<body><nav class="archive-nav" aria-label="Artwork navigation"><a href="/webgl/">← Archive</a><label>Volume <input id="archive-volume" aria-label="Master volume" type="range" min="0" max="0.5" step="0.01" value="0.12"></label><button id="archive-mute" aria-pressed="false">Mute</button></nav>
+
+<canvas id="glcanvas"></canvas>
+
+<div id="overlay">
+  <h1>RN-3 // EVENING TOADSONGS</h1>
+  <p><b>SLOW TIDE — 36 BPM</b><br>A quiet central drone, a melody to the left, and distant calls to the right.<br>Notes arrive every four beats; toad calls answer between phrases.<br>
+  Drag across the horizon or play keys <b>[A–L]</b> / <b>[W–P]</b> to sculpt the synth lead and peeling sunset swell.</p>
+  <p style="margin:0 0 12px">Sound starts only when you press play. Initial volume: 12%.</p><button class="start-btn">PLAY SLOW TIDE</button>
+</div>
+
+<div id="hud">
+  <div class="header-row">
+    <span><span class="catalog-badge">CAT NO. RN-3</span> CAPTAIN THRLLAMA (ROM) NURIO — BONDI 1987</span>
+    <span id="note-readout">FREQ: 220.0 HZ</span>
+  </div>
+
+  <p class="scene-note">SLOW TIDE · Melody left / calls right / drone centre.<br>
+  <span id="timing-readout">36 BPM · melody every 6.7s · calls every 13.3s</span></p>
+  <div class="controls-grid">
+    <div class="ctrl">
+      <label for="tempo"><span>Tempo</span><span id="val-tempo">36 BPM</span></label>
+      <input type="range" id="tempo" min="20" max="72" step="1" value="36">
+    </div>
+    <div class="ctrl">
+      <label for="drone-level"><span>Drone · Centre</span><span id="val-drone-level">4.0%</span></label>
+      <input type="range" id="drone-level" min="0" max="0.12" step="0.005" value="0.04">
+    </div>
+    <div class="ctrl">
+      <label for="lead-level"><span>Melody · Left</span><span id="val-lead-level">18.0%</span></label>
+      <input type="range" id="lead-level" min="0" max="0.3" step="0.005" value="0.18">
+    </div>
+    <div class="ctrl">
+      <label for="toad-level"><span>Calls · Right</span><span id="val-toad-level">6.0%</span></label>
+      <input type="range" id="toad-level" min="0" max="0.14" step="0.005" value="0.06">
+    </div>
+    <div class="ctrl">
+      <label for="curl"><span>Peel Curl</span><span id="val-curl">0.42</span></label>
+      <input type="range" id="curl" min="0.1" max="1.2" step="0.01" value="0.42">
+    </div>
+    <div class="ctrl">
+      <label for="breath"><span>Flute Breath</span><span id="val-breath">0.12</span></label>
+      <input type="range" id="breath" min="0.0" max="1.0" step="0.01" value="0.12">
+    </div>
+    <div class="ctrl">
+      <label for="glide"><span>Glide Time</span><span id="val-glide">0.55s</span></label>
+      <input type="range" id="glide" min="0.01" max="0.6" step="0.01" value="0.55">
+    </div>
+    <div class="ctrl">
+      <label for="delay"><span>Echo Feedback</span><span id="val-delay">0.24</span></label>
+      <input type="range" id="delay" min="0.0" max="0.88" step="0.01" value="0.24">
+    </div>
+    <div class="ctrl">
+      <label for="warmth"><span>Tape Warmth</span><span id="val-warmth">0.22</span></label>
+      <input type="range" id="warmth" min="0.0" max="1.0" step="0.01" value="0.22">
+    </div>
+    <div class="ctrl">
+      <label for="scale"><span>Scale Mode</span></label>
+      <select id="scale">
+        <option value="lydian">Bondi Sunset (Lydian)</option>
+        <option value="hirajoshi">Toad Temple (Hirajoshi)</option>
+        <option value="mixolydian">Colo River (Mixolydian)</option>
+        <option value="just">Microtonal (7-Limit Just)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <div>
+      <button id="btn-drone" class="active" aria-pressed="true">SUNSET DRONE: ON</button>
+      <button id="btn-toads" class="active" aria-pressed="true">TEMPLE TOADS: ON</button>
+      <button id="btn-arp" class="active" aria-pressed="true">SLOW MELODY: ON</button>
+      <button id="btn-pause">PAUSE AUDIO</button>
+    </div>
+    <span class="hint">Drag X: Pitch Lead | Drag Y: Filter &amp; Swell Peak | Keys: A-L</span>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// 1. WEBGL 2.0 PSYCHEDELIC POINT BREAK & SUNSET SHADER
+// ============================================================================
+const canvas = document.getElementById('glcanvas');
+const gl = canvas.getContext('webgl2', { antialias: false });
+if (!gl) { document.querySelector('#overlay p').textContent = 'This artwork needs WebGL 2. Please try a browser with graphics acceleration enabled.'; document.querySelector('.start-btn').disabled = true; throw new Error('WebGL 2 unavailable'); }
+
+const vsSource = `#version 300 es
+in vec2 a_pos;
+out vec2 v_uv;
+void main() {
+  v_uv = a_pos * 0.5 + 0.5;
+  gl_Position = vec4(a_pos, 0.0, 1.0);
+}`;
+
+const fsSource = `#version 300 es
+precision highp float;
+in vec2 v_uv;
+out vec4 fragColor;
+
+uniform vec2 u_res;
+uniform float u_time;
+uniform vec2 u_mouse;
+uniform float u_playing;
+uniform float u_curl;
+uniform float u_warmth;
+uniform float u_bass;
+uniform float u_mid;
+uniform float u_high;
+
+// 2D Hash & Value Noise
+float hash(vec2 p) {
+  p = fract(p * vec2(123.34, 456.21));
+  p += dot(p, p + 45.32);
+  return fract(p.x * p.y);
+}
+
+float noise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+    u.y
+  );
+}
+
+// Domain-Warped fBm for Psychedelic Fluid & Clouds
+float fbm(vec2 p) {
+  float v = 0.0;
+  float a = 0.5;
+  mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
+  for (int i = 0; i < 5; i++) {
+    v += a * noise(p);
+    p = rot * p * 2.05 + vec2(1.7, 9.2);
+    a *= 0.5;
+  }
+  return v;
+}
+
+// Peeling Point Break Wave Height & Curl Field
+vec3 waveField(vec2 p, float t) {
+  // Point-break diagonal peel angle (peeling from left point to right channel)
+  float peelSpeed = t * 1.45;
+  float swellPhase = p.y * 0.65 - p.x * 0.35 + peelSpeed;
+
+  // Primary groundswell trains
+  float w1 = sin(swellPhase * 3.2);
+  // Steep asymmetric wave crest (trochoidal approximation)
+  float crest = pow(max(0.0, w1 * 0.5 + 0.5), 2.4 - u_curl * 0.9);
+
+  // Peeling pocket window traveling along the wave line
+  float pocketX = sin(swellPhase * 1.6 - t * 0.8) * 2.5;
+  float pocketMask = exp(-pow((p.x - pocketX) * 0.45, 2.0));
+
+  // Audio-reactive boost from synth lead & bass
+  float audioLift = (u_bass * 0.45 + u_mid * 0.55) * (0.6 + 0.4 * u_playing);
+
+  // Overhanging tube lip fold when peaking
+  float tubeCurl = crest * pocketMask * (u_curl + audioLift);
+
+  // Domain-warped surface ripples
+  vec2 warp = vec2(fbm(p * 0.7 + t * 0.3), fbm(p * 0.7 - t * 0.25));
+  float detail = fbm(p * 1.8 + warp * (1.2 + u_high * 2.0) + vec2(peelSpeed * 0.5, 0.0));
+
+  float height = crest * (0.9 + audioLift) + tubeCurl * 0.65 + detail * 0.28;
+  float foam = smoothstep(0.62 - u_high * 0.25, 1.05, tubeCurl + detail * 0.55);
+
+  return vec3(height, foam, tubeCurl);
+}
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy - 0.5 * u_res) / u_res.y;
+  float t = u_time;
+
+  // Subtle VHS/Cassette tape flutter warp
+  float flutter = sin(t * 28.0 + uv.y * 40.0) * 0.0012 * u_warmth;
+  uv.x += flutter;
+
+  // Horizon tilts slightly with mouse Y
+  float horizon = -0.02 + (u_mouse.y - 0.5) * 0.14;
+
+  // Camera Setup
+  vec3 ro = vec3(0.0, 1.65 + u_bass * 0.2, -3.5);
+  vec3 rd = normalize(vec3(uv.x, uv.y - horizon, 1.25));
+
+  // ------------------------------------------------------------------
+  // SKY & PSYCHEDELIC BONDI SUNSET
+  // ------------------------------------------------------------------
+  vec2 sunPos = vec2((u_mouse.x - 0.5) * 0.65, 0.16 + sin(t * 0.15) * 0.03);
+  float sunDist = length(uv - sunPos);
+
+  // Warm Pink / Orange / Violet Sunset Gradient
+  vec3 skyTop = vec3(0.14, 0.04, 0.28);
+  vec3 skyMid = vec3(0.88, 0.22, 0.48);
+  vec3 skyLow = vec3(1.00, 0.62, 0.22);
+  float skyGrad = clamp((uv.y - horizon) * 1.8, 0.0, 1.0);
+  vec3 skyCol = mix(skyLow, skyMid, smoothstep(0.0, 0.45, skyGrad));
+  skyCol = mix(skyCol, skyTop, smoothstep(0.45, 1.0, skyGrad));
+
+  // Domain-warped psychedelic clouds
+  vec2 cloudUV = uv * vec2(1.6, 3.5) + vec2(t * 0.04, -t * 0.02);
+  float cl = fbm(cloudUV + fbm(cloudUV + t * 0.05));
+  vec3 cloudGlow = mix(vec3(1.0, 0.45, 0.3), vec3(0.95, 0.15, 0.65), cl);
+  skyCol = mix(skyCol, cloudGlow, cl * 0.45 * (1.0 - skyGrad * 0.6));
+
+  // Segmented 80s Synth Sun Disc + Audio Halo
+  float sunRadius = 0.21 + u_mid * 0.035;
+  float slice = sin((uv.y - sunPos.y) * 150.0 - t * 3.0);
+  float sliceMask = step(-0.25, slice + (uv.y - sunPos.y) * 5.5);
+  float sunDisc = smoothstep(sunRadius, sunRadius - 0.008, sunDist) * sliceMask;
+  vec3 sunColor = mix(vec3(1.0, 0.3, 0.55), vec3(1.0, 0.95, 0.55), clamp((uv.y - sunPos.y + sunRadius) / (2.0 * sunRadius), 0.0, 1.0));
+
+  skyCol += vec3(1.0, 0.45, 0.25) * (0.045 / (sunDist + 0.04)) * (1.0 + u_mid * 0.8);
+  skyCol = mix(skyCol, sunColor, sunDisc);
+
+  vec3 col = skyCol;
+
+  // ------------------------------------------------------------------
+  // OCEAN POINT BREAK RAYMARCHING
+  // ------------------------------------------------------------------
+  if (rd.y < 0.08) {
+    // Intersect base ocean plane and refine with 28-step heightfield march
+    float dist = 0.4;
+    float hit = 0.0;
+    vec3 p;
+    vec3 wf;
+
+    for (int i = 0; i < 28; i++) {
+      p = ro + rd * dist;
+      wf = waveField(p.xz, t);
+      float hDiff = p.y - wf.x;
+      if (hDiff < 0.015 || dist > 26.0) {
+        hit = 1.0;
+        break;
+      }
+      dist += max(0.06, hDiff * 0.48);
+    }
+
+    if (hit > 0.5 && dist <= 26.0) {
+      // Compute surface normal via finite differences
+      vec2 eps = vec2(0.05, 0.0);
+      float hL = waveField(p.xz - eps.xy, t).x;
+      float hR = waveField(p.xz + eps.xy, t).x;
+      float hD = waveField(p.xz - eps.yx, t).x;
+      float hU = waveField(p.xz + eps.yx, t).x;
+      vec3 norm = normalize(vec3(hL - hR, 0.14, hD - hU));
+
+      // Fresnel & Sunset Reflections
+      vec3 viewDir = -rd;
+      float fresnel = pow(1.0 - max(0.0, dot(norm, viewDir)), 4.0);
+      vec3 reflDir = reflect(rd, norm);
+
+      // Base deep ocean vs translucent turquoise-pink wave curl
+      vec3 deepSea = vec3(0.06, 0.03, 0.18);
+      vec3 tubeAqua = mix(vec3(0.08, 0.72, 0.78), vec3(1.0, 0.35, 0.68), u_warmth * 0.65);
+
+      // Subsurface scattering inside the peeling wave lip
+      float sss = clamp(wf.z * 1.35 + max(0.0, norm.y) * 0.3, 0.0, 1.0);
+      vec3 waterCol = mix(deepSea, tubeAqua, sss * 0.75);
+
+      // Warm pink-orange sunset reflection path across the peeling face
+      vec3 sunDir = normalize(vec3(sunPos.x, max(0.05, sunPos.y), 1.0));
+      float spec = pow(max(0.0, dot(reflDir, sunDir)), 36.0 + u_high * 40.0);
+      vec3 reflCol = mix(vec3(0.95, 0.25, 0.55), vec3(1.0, 0.78, 0.35), fresnel);
+
+      waterCol = mix(waterCol, reflCol, clamp(fresnel * 0.85, 0.0, 1.0));
+      waterCol += vec3(1.0, 0.82, 0.45) * spec * (1.4 + u_mid * 1.5);
+
+      // Psychedelic Seafoam & Peeling Whitewater Lip
+      vec3 foamCol = mix(vec3(1.0, 0.86, 0.92), vec3(0.45, 0.98, 1.0), sin(p.x * 2.0 + t * 4.0) * 0.5 + 0.5);
+      waterCol = mix(waterCol, foamCol, clamp(wf.y, 0.0, 1.0));
+
+      // Horizon atmospheric haze blend
+      float fog = exp(-dist * 0.085);
+      col = mix(skyLow, waterCol, fog);
+    }
+  }
+
+  // 1987 Analog Cassette Scanlines & Warmth Grading
+  float scanline = sin(gl_FragCoord.y * 1.8) * 0.03 * u_warmth;
+  col += scanline;
+  col = pow(max(col, vec3(0.0)), vec3(0.92)); // Gentle gamma lift
+
+  fragColor = vec4(col, 1.0);
+}`;
+
+function compileShader(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+    console.error(gl.getShaderInfoLog(s));
+  }
+  return s;
+}
+
+const prog = gl.createProgram();
+gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, vsSource));
+gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, fsSource));
+gl.linkProgram(prog);
+gl.useProgram(prog);
+
+const quadBuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+const aPos = gl.getAttribLocation(prog, 'a_pos');
+gl.enableVertexAttribArray(aPos);
+gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+const uniforms = {
+  res: gl.getUniformLocation(prog, 'u_res'),
+  time: gl.getUniformLocation(prog, 'u_time'),
+  mouse: gl.getUniformLocation(prog, 'u_mouse'),
+  playing: gl.getUniformLocation(prog, 'u_playing'),
+  curl: gl.getUniformLocation(prog, 'u_curl'),
+  warmth: gl.getUniformLocation(prog, 'u_warmth'),
+  bass: gl.getUniformLocation(prog, 'u_bass'),
+  mid: gl.getUniformLocation(prog, 'u_mid'),
+  high: gl.getUniformLocation(prog, 'u_high'),
+};
+
+function resize() {
+  canvas.width = window.innerWidth * Math.min(window.devicePixelRatio, 1.5);
+  canvas.height = window.innerHeight * Math.min(window.devicePixelRatio, 1.5);
+  gl.viewport(0, 0, canvas.width, canvas.height);
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ============================================================================
+// 2. RN-3 (1987) WEB AUDIO SYNTHESIZER & TOAD RESONATOR ENGINE
+// ============================================================================
+let actx = null;
+let archiveMaster = null, archiveMuted = false;
+let analyser = null;
+let freqData = null;
+
+let leadOsc1, leadOsc2, breathGain, leadFilter, leadVca, delayFb, tapeShaper;
+let droneGain = null;
+let isStarted = false;
+let isPointerDown = false;
+let droneEnabled = true;
+let toadsEnabled = true;
+let arpEnabled = true;
+let schedulerTimer = null;
+let nextBeatTime = 0, transportBeat = 0, melodyStep = 0;
+let leadPan, toadPan, leadSend, toadSend;
+let manualQuietUntil = 0;
+const heldKeys = new Set();
+const readControl = id => Number(document.getElementById(id).value);
+const manualIsActive = () => isPointerDown || heldKeys.size > 0;
+
+const mouse = { x: 0.5, y: 0.55 };
+
+// Scales inspired by Evening Toadsongs (RN-3)
+const SCALES = {
+  lydian:     [1.0, 9/8, 5/4, 45/32, 3/2, 27/16, 15/8, 2.0], // Bondi Sunset Lydian
+  hirajoshi:  [1.0, 9/8, 6/5, 3/2, 8/5, 2.0, 9/4, 12/5],     // Toad Temple Pentatonic
+  mixolydian: [1.0, 9/8, 5/4, 4/3, 3/2, 5/3, 9/5, 2.0],      // Colo River Float
+  just:       [1.0, 8/7, 7/6, 4/3, 3/2, 12/7, 7/4, 2.0]      // 7-Limit Microtonal
+};
+
+function makeTapeCurve(amount) {
+  const n = 8192;
+  const curve = new Float32Array(n);
+  const k = 1 + amount * 14;
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2) / n - 1;
+    curve[i] = Math.tanh(x * k) / Math.tanh(k);
+  }
+  return curve;
+}
+
+function initAudio() {
+  if (isStarted) return;
+  actx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = actx.createAnalyser();
+  analyser.fftSize = 512;
+  analyser.smoothingTimeConstant = 0.82;
+  freqData = new Uint8Array(analyser.frequencyBinCount);
+
+  // Master Tape Saturation & Bus
+  tapeShaper = actx.createWaveShaper();
+  tapeShaper.curve = makeTapeCurve(parseFloat(document.getElementById('warmth').value));
+  tapeShaper.oversample = '2x';
+
+  const masterGain = actx.createGain();
+  archiveMaster = masterGain;
+  masterGain.gain.value = archiveMuted ? 0 : Number(document.getElementById('archive-volume').value);
+
+  // Stereo Ping-Pong Tape Delay with Wow/Flutter LFO
+  const delayL = actx.createDelay(2.0);
+  const delayR = actx.createDelay(2.0);
+  delayL.delayTime.value = 0.75;
+  delayR.delayTime.value = 1.125;
+
+  const wowLfo = actx.createOscillator();
+  const wowDepth = actx.createGain();
+  wowLfo.frequency.value = 0.18;
+  wowDepth.gain.value = 0.0025;
+  wowLfo.connect(wowDepth);
+  wowDepth.connect(delayL.delayTime);
+  wowDepth.connect(delayR.delayTime);
+  wowLfo.start();
+
+  delayFb = actx.createGain();
+  delayFb.gain.value = parseFloat(document.getElementById('delay').value);
+
+  const delayFilter = actx.createBiquadFilter();
+  delayFilter.type = 'bandpass';
+  delayFilter.frequency.value = 1100;
+  delayFilter.Q.value = 0.7;
+
+  // Routing Delay Loop
+  delayL.connect(delayR);
+  delayR.connect(delayFilter);
+  delayFilter.connect(delayFb);
+  delayFb.connect(delayL);
+
+  // --- RN-3 SYNTH LEAD VOICE ---
+  leadOsc1 = actx.createOscillator();
+  leadOsc2 = actx.createOscillator();
+  leadOsc1.type = 'triangle';
+  leadOsc2.type = 'sawtooth';
+  leadOsc1.frequency.value = 220;
+  leadOsc2.frequency.value = 220 * 1.004; // Warm chorus detune
+
+  // Vibrato LFO
+  const vibLfo = actx.createOscillator();
+  const vibGain = actx.createGain();
+  vibLfo.frequency.value = 5.2;
+  vibGain.gain.value = 3.2;
+  vibLfo.connect(vibGain);
+  vibGain.connect(leadOsc1.frequency);
+  vibGain.connect(leadOsc2.frequency);
+  vibLfo.start();
+
+  // Chiff / Flute Breath Noise Generator
+  const noiseBuf = actx.createBuffer(1, actx.sampleRate * 2, actx.sampleRate);
+  const out = noiseBuf.getChannelData(0);
+  for (let i = 0; i < out.length; i++) out[i] = Math.random() * 2 - 1;
+  const noiseNode = actx.createBufferSource();
+  noiseNode.buffer = noiseBuf;
+  noiseNode.loop = true;
+
+  const breathFilter = actx.createBiquadFilter();
+  breathFilter.type = 'bandpass';
+  breathFilter.frequency.value = 1800;
+  breathFilter.Q.value = 2.5;
+
+  breathGain = actx.createGain();
+  breathGain.gain.value = parseFloat(document.getElementById('breath').value) * 0.22;
+  noiseNode.connect(breathFilter);
+  breathFilter.connect(breathGain);
+  noiseNode.start();
+
+  // Lead Resonant Lowpass Filter & VCA
+  leadFilter = actx.createBiquadFilter();
+  leadFilter.type = 'lowpass';
+  leadFilter.frequency.value = 1400;
+  leadFilter.Q.value = 1.6;
+
+  leadVca = actx.createGain();
+  leadVca.gain.value = 0.0;
+
+  const osc2Gain = actx.createGain();
+  osc2Gain.gain.value = 0.35;
+
+  leadOsc1.connect(leadFilter);
+  leadOsc2.connect(osc2Gain);
+  osc2Gain.connect(leadFilter);
+  breathGain.connect(leadFilter);
+  leadFilter.connect(leadVca);
+
+  // Give the two foreground voices separate dry positions and quiet echo sends.
+  leadPan = actx.createStereoPanner();
+  leadPan.pan.value = -0.38;
+  toadPan = actx.createStereoPanner();
+  toadPan.pan.value = 0.55;
+  leadSend = actx.createGain();
+  leadSend.gain.value = 0.18;
+  toadSend = actx.createGain();
+  toadSend.gain.value = 0.10;
+  leadVca.connect(leadPan);
+  leadPan.connect(tapeShaper);
+  leadVca.connect(leadSend);
+  leadSend.connect(delayL);
+  toadPan.connect(tapeShaper);
+  toadPan.connect(toadSend);
+  toadSend.connect(delayL);
+
+  leadOsc1.start();
+  leadOsc2.start();
+
+  // --- WARM SUNSET PAD DRONE (A2 + E3 + B3) ---
+  droneGain = actx.createGain();
+  droneGain.gain.value = 0;
+  droneGain.gain.setTargetAtTime(droneEnabled ? readControl('drone-level') : 0, actx.currentTime, 1.5);
+  const droneFilter = actx.createBiquadFilter();
+  droneFilter.type = 'lowpass';
+  droneFilter.frequency.value = 270;
+
+  [110.0, 165.0, 247.5, 330.0].forEach((freq, idx) => {
+    const o = actx.createOscillator();
+    o.type = idx % 2 === 0 ? 'sawtooth' : 'triangle';
+    o.frequency.value = freq + (idx - 1.5) * 0.35;
+    o.connect(droneFilter);
+    o.start();
+  });
+  droneFilter.connect(droneGain);
+  droneGain.connect(tapeShaper);
+  // Keep the drone dry so the centre does not fill the echo field.
+
+  // Final Mix into Analyser & Output
+  const echoGain = actx.createGain();
+  echoGain.gain.value = 0.16;
+  const echoPanL = actx.createStereoPanner();
+  const echoPanR = actx.createStereoPanner();
+  echoPanL.pan.value = -0.8;
+  echoPanR.pan.value = 0.8;
+  delayL.connect(echoPanL);
+  delayR.connect(echoPanR);
+  echoPanL.connect(echoGain);
+  echoPanR.connect(echoGain);
+  echoGain.connect(tapeShaper);
+  tapeShaper.connect(masterGain);
+  masterGain.connect(analyser);
+  analyser.connect(actx.destination);
+
+  isStarted = true;
+  document.getElementById('overlay').style.display = 'none';
+  nextBeatTime = actx.currentTime + 0.15;
+  schedulerTimer = setInterval(scheduleLayers, 50);
+  scheduleLayers();
+}
+
+// Quantize normalized 0..1 X position to selected scale
+function getQuantizedFreq(normX) {
+  const scaleKey = document.getElementById('scale').value;
+  const ratios = SCALES[scaleKey];
+  const baseFreq = 165.0; // E3 root
+  const totalNotes = ratios.length * 2;
+  const idx = Math.floor(Math.max(0, Math.min(0.999, normX)) * totalNotes);
+  const octave = Math.floor(idx / ratios.length);
+  const degree = idx % ratios.length;
+  return baseFreq * ratios[degree] * Math.pow(2, octave);
+}
+
+function triggerLead(normX, normY, at = actx?.currentTime, gateSeconds = null) {
+  if (!isStarted) return;
+  const now = actx.currentTime;
+  const when = Math.max(now, at);
+  const glide = readControl('glide');
+  const freq = getQuantizedFreq(normX);
+  leadOsc1.frequency.cancelAndHoldAtTime(now);
+  leadOsc2.frequency.cancelAndHoldAtTime(now);
+  leadFilter.frequency.cancelAndHoldAtTime(now);
+  leadOsc1.frequency.setTargetAtTime(freq, when, glide * 0.35);
+  leadOsc2.frequency.setTargetAtTime(freq * 1.004, when, glide * 0.35);
+  const cutoff = 350 + Math.pow(1.0 - normY, 2.0) * 3000;
+  leadFilter.frequency.setTargetAtTime(cutoff, when, 0.12);
+  // Cancel any automatic release when the player takes over.
+  leadVca.gain.cancelAndHoldAtTime(now);
+  leadVca.gain.setTargetAtTime(readControl('lead-level'), when, 0.11);
+  if (gateSeconds !== null) {
+    leadVca.gain.setTargetAtTime(0, when + gateSeconds, 0.13);
+    leadVca.gain.setValueAtTime(0, when + gateSeconds + 0.7);
+  }
+  document.getElementById('note-readout').textContent = `FREQ: ${freq.toFixed(1)} HZ`;
+}
+
+function releaseLead() {
+  if (!isStarted || manualIsActive()) return;
+  const now = actx.currentTime;
+  leadVca.gain.cancelAndHoldAtTime(now);
+  leadVca.gain.setTargetAtTime(0, now, 0.16);
+  leadVca.gain.setValueAtTime(0, now + 0.85);
+  manualQuietUntil = now + 2;
+}
+
+// Synthesize an organic 1987 "Temple Toad" formant croak/chirp
+function triggerToadCroak(at = actx?.currentTime) {
+  if (!isStarted || !toadsEnabled || readControl('toad-level') === 0) return;
+  const now = Math.max(actx.currentTime, at);
+  const carrier = actx.createOscillator();
+  const mod = actx.createOscillator();
+  const modGain = actx.createGain();
+  const filter = actx.createBiquadFilter();
+  const env = actx.createGain();
+
+  // Rapid ribbit AM/FM modulation
+  const basePitch = 240 + Math.random() * 280;
+  carrier.type = 'sawtooth';
+  carrier.frequency.setValueAtTime(basePitch, now);
+  carrier.frequency.exponentialRampToValueAtTime(basePitch * 1.45, now + 0.14);
+  carrier.frequency.exponentialRampToValueAtTime(basePitch * 0.85, now + 0.28);
+
+  mod.type = 'sine';
+  mod.frequency.value = 34 + Math.random() * 18; // Throat trill rate
+  modGain.gain.value = 110;
+
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(650, now);
+  filter.frequency.exponentialRampToValueAtTime(1450, now + 0.16);
+  filter.Q.value = 6.0;
+
+  env.gain.setValueAtTime(0.001, now);
+  env.gain.linearRampToValueAtTime(readControl('toad-level'), now + 0.05);
+  env.gain.exponentialRampToValueAtTime(0.0008, now + 0.32);
+
+  mod.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(filter);
+  filter.connect(env);
+  env.connect(toadPan);
+  carrier.onended = () => {
+    carrier.disconnect(); mod.disconnect(); modGain.disconnect();
+    filter.disconnect(); env.disconnect();
+  };
+
+  carrier.start(now);
+  mod.start(now);
+  carrier.stop(now + 0.34);
+  mod.stop(now + 0.34);
+}
+
+// One audio-clock transport: a melody every four beats; a call on beat 3
+// of every other phrase. At 36 BPM this leaves 3.33 seconds between onsets.
+function scheduleLayers() {
+  if (!isStarted || actx.state !== 'running') return;
+  const now = actx.currentTime;
+  if (nextBeatTime < now - 0.25) nextBeatTime = now + 0.12;
+  while (nextBeatTime < now + 0.12) {
+    const beatSeconds = 60 / readControl('tempo');
+    const spaceIsFree = !manualIsActive() && nextBeatTime >= manualQuietUntil;
+    if (transportBeat % 4 === 0 && arpEnabled && spaceIsFree) {
+      const pattern = [0.05, 0.38, 0.22, 0.55, 0.38, 0.72, 0.22, 0.05];
+      const nx = pattern[melodyStep++ % pattern.length];
+      mouse.x = nx;
+      triggerLead(nx, 0.62, nextBeatTime, Math.min(1.4, beatSeconds * 0.55));
+    }
+    if (transportBeat % 8 === 2 && toadsEnabled && spaceIsFree) {
+      triggerToadCroak(nextBeatTime);
+    }
+    transportBeat++;
+    nextBeatTime += beatSeconds;
+  }
+}
+
+function updateTimingReadout() {
+  const bpm = readControl('tempo');
+  document.getElementById('timing-readout').textContent =
+    `${bpm} BPM · melody every ${(240 / bpm).toFixed(1)}s · calls every ${(480 / bpm).toFixed(1)}s`;
+}
+
+// ============================================================================
+// 3. INTERACTION & HUD BINDINGS
+// ============================================================================
+document.querySelector('.start-btn').addEventListener('click', (e) => {
+  initAudio();
+  document.getElementById('overlay').style.display = 'none';
+});
+
+canvas.addEventListener('pointerdown', (e) => {
+  initAudio();
+  isPointerDown = true;
+  mouse.x = e.clientX / window.innerWidth;
+  mouse.y = e.clientY / window.innerHeight;
+  triggerLead(mouse.x, mouse.y);
+});
+
+window.addEventListener('pointermove', (e) => {
+  mouse.x = e.clientX / window.innerWidth;
+  mouse.y = e.clientY / window.innerHeight;
+  if (isPointerDown) triggerLead(mouse.x, mouse.y);
+});
+
+window.addEventListener('pointerup', () => {
+  if (!isPointerDown) return;
+  isPointerDown = false;
+  releaseLead();
+});
+
+// Computer Keyboard Lead Performance (A-L & W-P)
+const KEY_MAP = 'awsedftgyhujkolp;';
+window.addEventListener('keydown', (e) => {
+  if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.target.matches('input, select, button, textarea')) return;
+  const idx = KEY_MAP.indexOf(e.key.toLowerCase());
+  if (idx !== -1) {
+    initAudio();
+    const normX = idx / (KEY_MAP.length - 1);
+    mouse.x = normX;
+    heldKeys.add(e.key.toLowerCase());
+    triggerLead(normX, mouse.y);
+  }
+});
+window.addEventListener('keyup', (e) => {
+  if (heldKeys.delete(e.key.toLowerCase())) {
+    releaseLead();
+  }
+});
+
+window.addEventListener('pointercancel', () => {
+  if (!isPointerDown) return;
+  isPointerDown = false;
+  releaseLead();
+});
+window.addEventListener('blur', () => {
+  if (!manualIsActive()) return;
+  isPointerDown = false;
+  heldKeys.clear();
+  releaseLead();
+});
+
+// UI Sliders
+const bindSlider = (id, labelId, suffix, cb) => {
+  const el = document.getElementById(id);
+  const lbl = document.getElementById(labelId);
+  el.addEventListener('input', () => {
+    lbl.textContent = el.value + suffix;
+    if (cb) cb(parseFloat(el.value));
+  });
+};
+
+bindSlider('tempo', 'val-tempo', ' BPM', () => {
+  updateTimingReadout();
+  if (isStarted) nextBeatTime = actx.currentTime + 60 / readControl('tempo');
+});
+for (const id of ['drone-level', 'lead-level', 'toad-level']) {
+  bindSlider(id, 'val-' + id, '', value => {
+    document.getElementById('val-' + id).textContent = (value * 100).toFixed(1) + '%';
+    if (!isStarted) return;
+    if (id === 'drone-level') droneGain.gain.setTargetAtTime(droneEnabled ? value : 0, actx.currentTime, 0.4);
+    if (id === 'lead-level' && manualIsActive()) leadVca.gain.setTargetAtTime(value, actx.currentTime, 0.1);
+  });
+}
+bindSlider('curl', 'val-curl', '');
+bindSlider('breath', 'val-breath', '', (v) => { if (breathGain) breathGain.gain.setTargetAtTime(v * 0.22, actx.currentTime, 0.05); });
+bindSlider('glide', 'val-glide', 's');
+bindSlider('delay', 'val-delay', '', (v) => { if (delayFb) delayFb.gain.setTargetAtTime(v, actx.currentTime, 0.1); });
+bindSlider('warmth', 'val-warmth', '', (v) => { if (tapeShaper) tapeShaper.curve = makeTapeCurve(v); });
+
+// Toggle Buttons
+document.getElementById('btn-drone').addEventListener('click', (e) => {
+  droneEnabled = !droneEnabled;
+  e.target.classList.toggle('active', droneEnabled);
+  e.target.setAttribute('aria-pressed', String(droneEnabled));
+  e.target.textContent = `SUNSET DRONE: ${droneEnabled ? 'ON' : 'OFF'}`;
+  if (droneGain) droneGain.gain.setTargetAtTime(droneEnabled ? readControl('drone-level') : 0, actx.currentTime, 0.2);
+});
+
+document.getElementById('btn-toads').addEventListener('click', (e) => {
+  toadsEnabled = !toadsEnabled;
+  e.target.classList.toggle('active', toadsEnabled);
+  e.target.setAttribute('aria-pressed', String(toadsEnabled));
+  e.target.textContent = `TEMPLE TOADS: ${toadsEnabled ? 'ON' : 'OFF'}`;
+});
+
+document.getElementById('btn-arp').addEventListener('click', (e) => {
+  arpEnabled = !arpEnabled;
+  e.target.classList.toggle('active', arpEnabled);
+  e.target.setAttribute('aria-pressed', String(arpEnabled));
+  e.target.textContent = `SLOW MELODY: ${arpEnabled ? 'ON' : 'OFF'}`;
+  if (!arpEnabled) releaseLead();
+});
+
+document.getElementById('btn-pause').addEventListener('click', async (e) => {
+  if (!isStarted) return;
+  e.target.disabled = true;
+  try {
+    if (actx.state === 'running') {
+      await actx.suspend();
+      e.target.textContent = 'RESUME AUDIO';
+    } else {
+      nextBeatTime = actx.currentTime + 0.15;
+      await actx.resume();
+      e.target.textContent = 'PAUSE AUDIO';
+    }
+  } finally {
+    e.target.disabled = false;
+  }
+});
+
+// ============================================================================
+// 4. RENDER & FFT MODULATION LOOP
+// ============================================================================
+let smoothBass = 0, smoothMid = 0, smoothHigh = 0;
+
+function render(nowMs) {
+  const t = nowMs * 0.001;
+
+  if (isStarted && analyser) {
+    analyser.getByteFrequencyData(freqData);
+    let b = 0, m = 0, h = 0;
+    for (let i = 0; i < 12; i++) b += freqData[i];
+    for (let i = 12; i < 55; i++) m += freqData[i];
+    for (let i = 55; i < 140; i++) h += freqData[i];
+    smoothBass = smoothBass * 0.85 + (b / (12 * 255)) * 0.15;
+    smoothMid  = smoothMid  * 0.85 + (m / (43 * 255)) * 0.15;
+    smoothHigh = smoothHigh * 0.85 + (h / (85 * 255)) * 0.15;
+  }
+
+  gl.uniform2f(uniforms.res, canvas.width, canvas.height);
+  gl.uniform1f(uniforms.time, t);
+  gl.uniform2f(uniforms.mouse, mouse.x, 1.0 - mouse.y);
+  gl.uniform1f(uniforms.playing, (manualIsActive() || (arpEnabled && actx?.state === 'running')) ? 1.0 : 0.0);
+  gl.uniform1f(uniforms.curl, parseFloat(document.getElementById('curl').value));
+  gl.uniform1f(uniforms.warmth, parseFloat(document.getElementById('warmth').value));
+  gl.uniform1f(uniforms.bass, smoothBass);
+  gl.uniform1f(uniforms.mid, smoothMid);
+  gl.uniform1f(uniforms.high, smoothHigh);
+
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+
+function archiveVolume(){if(archiveMaster) archiveMaster.gain.setTargetAtTime(archiveMuted ? 0 : Number(document.getElementById('archive-volume').value),actx.currentTime,0.05);}
+document.getElementById('archive-volume').addEventListener('input', archiveVolume);
+document.getElementById('archive-mute').addEventListener('click', e=>{archiveMuted=!archiveMuted;archiveVolume();e.currentTarget.textContent=archiveMuted?'Unmute':'Mute';e.currentTarget.setAttribute('aria-pressed',String(archiveMuted));});
+document.addEventListener('visibilitychange',()=>{if(document.hidden && archiveMaster){archiveMuted=true;archiveVolume();document.getElementById('archive-mute').textContent='Unmute';document.getElementById('archive-mute').setAttribute('aria-pressed','true');}});
+</script>
+</body>
+</html>
